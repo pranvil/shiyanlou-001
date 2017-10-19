@@ -91,18 +91,22 @@ class DataProcess(object):
 
 if __name__=="__main__":    
     args = sys.argv[1:]
-    index_config = args.index('-d')+1
-    index_user = args.index('-c')+1
-    index_output = args.index('-o')+1
+    try:
+        index_config = args.index('-d')+1
+        index_user = args.index('-c')+1
+        index_output = args.index('-o')+1
+    except:
+        print('Parameter incorrect')
+        os._exit(0)
     user = args[index_config]
     confile = args[index_user]
     result = args[index_output]
-    t = [user,confile,result,'-c','-d','-o']
+    t = [user,confile,result]
     for i in t:
         if os.path.exists(i):
             pass
         else:
-            print('file did not exist or parameter incorrect')
+            print('file did not exist')
             os._exit(0)
     userdata = DataProcess(user)
     userdata.output(confile,result)
