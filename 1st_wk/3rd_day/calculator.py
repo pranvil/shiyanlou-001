@@ -35,7 +35,7 @@ class DataProcess(object):
             with open(userfile,'r') as file:
                 for line in file:
                     tmp = line.split(',')
-                    self.userdata[tmp[0].strip()] = tmp[1].strip()
+                    self.userdata[tmp[0].strip()] = float(tmp[1].strip())
         except:
             print('Parameter Error')
             os._exit(0)
@@ -104,7 +104,7 @@ if __name__=="__main__":
     user = args[index_config]
     confile = args[index_user]
     result = args[index_output]
-    t = [user,confile,result]
+    t = [user,confile]
     for i in t:
         if os.path.exists(i):
             pass
