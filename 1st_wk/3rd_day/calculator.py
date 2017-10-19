@@ -10,10 +10,8 @@ class Config(object):
             for line in file:
                 tmp = line.split('=')
                 self.config[tmp[0].strip()] = tmp[1].strip()
-        print(self.config)
     def get_config(self,key):
         value = self.config[key]
-        #print(value)
         return value
 
     def get_total_rate(self):
@@ -21,7 +19,6 @@ class Config(object):
         rate = 0
         for i in rate_category:
             rate = float(self.get_config(i)) + float(rate)          
-        print('rate:',rate)
         return rate
 
 
@@ -33,7 +30,6 @@ class DataProcess(object):
             for line in file:
                 tmp = line.split(',')
                 self.userdata[tmp[0].strip()] = tmp[1].strip()
-            print(self.userdata)
             
 ##    def get_userdata(self,key):
 ##        value = self.userdata[key]
@@ -45,7 +41,6 @@ class DataProcess(object):
         config_data = Config(confile)
         rate = config_data.get_total_rate()
         for key,value in self.userdata.items():
-            print('original value:',value,'rate:',rate)            
             if float(value) < float(config_data.get_config('JiShuL')):
                 value = config_data.get_config('JiShuL')
             elif float(value) > float(config_data.get_config('JiShuH')):                
@@ -57,7 +52,7 @@ class DataProcess(object):
                 writer = csv.writer(file)
                 writer.writerow(final_result)
                           
-            print(final_result)
+#            print(final_result)
                         
 
     def calculate(self,salary,rate):        
@@ -111,3 +106,6 @@ if __name__=="__main__":
 
     userdata = DataProcess(user)
     userdata.output(confile,result)
+    with open(result) as file:
+        for line in file:
+            print(line)
