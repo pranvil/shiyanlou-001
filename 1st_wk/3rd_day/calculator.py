@@ -6,10 +6,15 @@ import csv
 class Config(object):
     def __init__(self,configfile):
         self.config = {}
-        with open(configfile,'r') as file:
-            for line in file:
-                tmp = line.split('=')
-                self.config[tmp[0].strip()] = tmp[1].strip()
+        try:
+            with open(configfile,'r') as file:
+                for line in file:
+                    tmp = line.split('=')
+                    self.config[tmp[0].strip()] = tmp[1].strip()
+        except:
+            print('Parameter Error')
+            os._exit(0)
+            
     def get_config(self,key):
         value = self.config[key]
         return value
@@ -26,15 +31,14 @@ class Config(object):
 class DataProcess(object):
     def __init__(self,userfile):
         self.userdata = {}
-        with open(userfile,'r') as file:
-            for line in file:
-                tmp = line.split(',')
-                self.userdata[tmp[0].strip()] = tmp[1].strip()
-            
-##    def get_userdata(self,key):
-##        value = self.userdata[key]
-##        print(value)
-##        return value
+        try:
+            with open(userfile,'r') as file:
+                for line in file:
+                    tmp = line.split(',')
+                    self.userdata[tmp[0].strip()] = tmp[1].strip()
+        except:
+            print('Parameter Error')
+            os._exit(0)
     
   
     def output(self,confile,result):
@@ -52,7 +56,6 @@ class DataProcess(object):
                 writer = csv.writer(file)
                 writer.writerow(final_result)
                           
-#            print(final_result)
                         
 
     def calculate(self,salary,rate):        
@@ -106,7 +109,7 @@ if __name__=="__main__":
         if os.path.exists(i):
             pass
         else:
-            print('file did not exist')
+            print('file does not exist')
             os._exit(0)
     userdata = DataProcess(user)
     userdata.output(confile,result)
