@@ -44,17 +44,18 @@ class DataProcess(object):
     def output(self,confile,result):
         config_data = Config(confile)
         rate = config_data.get_total_rate()
+        final_result = []
         for key,value in self.userdata.items():
             if float(value) < float(config_data.get_config('JiShuL')):
                 value = config_data.get_config('JiShuL')
             elif float(value) > float(config_data.get_config('JiShuH')):                
                 value = config_data.get_config('JiShuH')            
             pure_income = self.calculate(value,rate)
-            final_result = [key,self.userdata[key],format(pure_income[0],'.2f'),format(pure_income[1],'.2f'),format(pure_income[2],'.2f')]
-            
-            with open(result,'a') as file:
-                writer = csv.writer(file)
-                writer.writerow(final_result)
+            tmp = [key,self.userdata[key],format(pure_income[0],'.2f'),format(pure_income[1],'.2f'),format(pure_income[2],'.2f')]
+            final_result.append(tmp)
+        with open(result,'w',newline='') as file:
+            writer = csv.writer(file)
+            writer.writerows(final_result)
                           
                         
 
