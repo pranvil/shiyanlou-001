@@ -45,22 +45,27 @@ class DataProcess(object):
         config_data = Config(confile)
         rate = config_data.get_total_rate()
         final_result = []
-        for key,value in self.userdata.items():
-            if float(value) < float(config_data.get_config('JiShuL')):
+        for key,salary in self.userdata.items():
+            if float(salary) < float(config_data.get_config('JiShuL')):
                 value = config_data.get_config('JiShuL')
-            elif float(value) > float(config_data.get_config('JiShuH')):                
-                value = config_data.get_config('JiShuH')            
-            pure_income = self.calculate(value,rate)
-            tmp = [key,self.userdata[key],format(pure_income[0],'.2f'),format(pure_income[1],'.2f'),format(pure_income[2],'.2f')]
+            elif float(salary) > float(config_data.get_config('JiShuH')):                
+                value = config_data.get_config('JiShuH')
+            else:
+                value = salary
+            insurance = self.cal_insurance(value,rate)
+            pure_income = self.calculate(salary,insurance)
+            tmp = [key,self.userdata[key],format(insurance,'.2f'),format(pure_income[0],'.2f'),format(pure_income[1],'.2f')]
             final_result.append(tmp)
         with open(result,'w',newline='') as file:
             writer = csv.writer(file)
             writer.writerows(final_result)
-                          
+
+    def cal_insurance(self,value,rate):
+        insurance = float(value)*rate
+        return insurance                 
                         
 
-    def calculate(self,salary,rate):        
-        insurance = float(salary)*rate
+    def calculate(self,salary,insurance):        
         before_tax = float(salary)-float(insurance)
         a = before_tax - 3500                
                 
@@ -89,7 +94,7 @@ class DataProcess(object):
         else:
             revenue = tmp-a*0.45+13505
             tax = a*0.45-13505
-        return insurance,tax,revenue
+        return tax,revenue
 
 
 
