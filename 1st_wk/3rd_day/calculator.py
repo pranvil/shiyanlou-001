@@ -97,13 +97,13 @@ if __name__=="__main__":
     user = args[index_config]
     confile = args[index_user]
     result = args[index_output]
-    t = [user,confile,result]
+    t = [user,confile,result,'-c','-d','-o']
     for i in t:
         if os.path.exists(i):
             pass
         else:
-            print('file',i,'not exist')
-
+            print('file did not exist or parameter incorrect')
+            os._exit(0)
     userdata = DataProcess(user)
     userdata.output(confile,result)
     with open(result) as file:
