@@ -1,12 +1,13 @@
-#!/user/bin/env python3
+#!/usr/bin/env python3
 import sys
 import os
 import csv
+import time
 from multiprocessing import Process, Queue
 q_userdata = Queue()
 q_result = Queue()
 
-class config(Process);
+class config(Process):
     def __init__(self,cfgfile):
         self.config = {}
         try:
@@ -15,10 +16,11 @@ class config(Process);
                     tmp = line.split('=')
                     self.config[tmp[0].strip()] = float(tmp[1].strip())
         except:
-            print('Config file parameter Error')
+#            print('Config file parameter Error')
             sys.exit(1)
             
     def get_config(self,key):
+# print(self.config)
         value = self.config[key]
         return value
 
@@ -26,51 +28,54 @@ class config(Process);
         rate_category=['YangLao','YiLiao','ShiYe','GongShang','ShengYu','GongJiJin']
         rate = 0
         for i in rate_category:
-            rate += self.get_config(i))          
+            rate += self.get_config(i)          
         return rate
 
 
-class userdata(object);
+class userdata(object):
     def __init__(self,userfile):
         self.userdata = {}
         try:
             with open(userfile,'r') as file:
                 for line in file:
                     tmp = line.split(',')
-                    self.userdata[tmp[0].strip()] = float(tmp[1].strip())
+                    self.userdata[tmp[0].strip()] = tmp[1].strip()
         except:
             print('userdata Parameter Error')
             sys.exit(1)
-        q_userdata.put(self.userdata )
+        q_userdata.put(self.userdata)
     
 
-class calculate(Process);
+class calculate(Process):
     def __init__(self,cfgfile):
-        self.JiShuL = config(cfgfile).get_config(JiShuL)
-        self.JiShuH = config(cfgfile).get_config(JiShuH)
+        self.JiShuL = config(cfgfile).get_config('JiShuL')
+        self.JiShuH = config(cfgfile).get_config('JiShuH')
         self.rate = config(cfgfile).get_total_rate()
         
     def tax(self,salary,tax_rate,quick_deduction):
         insurance = self.insurance(salary)
-        tax_part = salary - insurance - 3500
+        tax_part = float(salary) - insurance - 3500
         tax = tax_part * tax_rate - quick_deduction
         return tax
 
 
     def insurance(self,salary):
-        if salary < self.JiShuL:
+        if float(salary) < self.JiShuL:
             insurance_part = self.JiShuL
-        if salary > self.JiShuH:
-            insurance_part = self.JiShuH                
-        insurance = insurance_part*self.rate
+        elif float(salary) > self.JiShuH:
+            insurance_part = self.JiShuH
+        else:
+            insurance_part = salary
+        insurance = float(insurance_part)*self.rate
         return insurance
 
     def result(self):
         user_info=[]
         userdata=q_userdata.get()
-        for key, salary in userdata:
+        for key, salary in userdata.items():
             insurance = self.insurance(salary)
-            a = salary - insurance -3500
+            a = float(salary) - insurance -3500
+            print('line78-salary:',salary)
             if a <=0:
                 tax_rate = float(0)
                 quick_deduction = 0
@@ -104,24 +109,21 @@ class calculate(Process);
                 quick_deduction = 13505
                 tax = self.tax(salary,tax_rate,quick_deduction)            
             #ID,salary,insurance,tax,income             
-            pure_income = salary - insurance - tax
+            pure_income = float(salary) - insurance - tax
             tmp=[key,salary,insurance,tax,pure_income]
             user_info.append(tmp)
+        print('line115-userinfo:',user_info[2])
         q_result.put(user_info)        
-
-
 class write_data(Process):
-    final_result = q_result.get()
+    final_result = q_result.get(timeout=1)
     with open(result,w) as file:
         writer = csv.writer(file)
         writer.writerows(final_result)
-
-
 if __name__ =='__main__':
     args = sys.argv[1:]
     try:
-        index_config = args.index('-d')+1
-        index_user = args.index('-c')+1
+        index_user = args.index('-d')+1
+        index_config = args.index('-c')+1
         index_output = args.index('-o')+1
     except:
         print('Parameter incorrect')
@@ -129,7 +131,7 @@ if __name__ =='__main__':
     cfgfile = args[index_config]
     userfile = args[index_user]
     result = args[index_output]
-    t = [user,confile]
+    t = [userfile,cfgfile]
     for i in t:
         if os.path.exists(i):
             pass
