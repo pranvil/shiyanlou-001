@@ -1,22 +1,22 @@
-#!/usr/bin/env python3
+#!/user/bin/env python3
 import sys
 import os
 import csv
-from multiprocessing import Process,Queue 
-q1 = Queue()
-q2 = Queue()
+from multiprocessing import Process, Queue
+q_userdata = Queue()
+q_result = Queue()
 
-class Config(Process):
-    def __init__(self,configfile):
+class config(Process);
+    def __init__(self,cfgfile):
         self.config = {}
         try:
-            with open(configfile,'r') as file:
+            with open(cfgfile,'r') as file:
                 for line in file:
                     tmp = line.split('=')
-                    self.config[tmp[0].strip()] = tmp[1].strip()
+                    self.config[tmp[0].strip()] = float(tmp[1].strip())
         except:
-            print('Parameter Error')
-            os._exit(0)
+            print('Config file parameter Error')
+            sys.exit(1)
             
     def get_config(self,key):
         value = self.config[key]
@@ -26,18 +26,11 @@ class Config(Process):
         rate_category=['YangLao','YiLiao','ShiYe','GongShang','ShengYu','GongJiJin']
         rate = 0
         for i in rate_category:
-            rate = float(self.get_config(i)) + float(rate)          
-        q1.put(rate)
-
-class write_file(Process):
-    def writ_file(self,result):
-        final_result=q2.get(timeout=1)
-        with open(result,'w',newline='') as file:
-        writer = csv.writer(file)
-        writer.writerows(final_result)
+            rate += self.get_config(i))          
+        return rate
 
 
-class DataProcess(Process):
+class userdata(object);
     def __init__(self,userfile):
         self.userdata = {}
         try:
@@ -46,69 +39,85 @@ class DataProcess(Process):
                     tmp = line.split(',')
                     self.userdata[tmp[0].strip()] = float(tmp[1].strip())
         except:
-            print('Parameter Error')
-            os._exit(0)
+            print('userdata Parameter Error')
+            sys.exit(1)
+        q_userdata.put(self.userdata )
     
-  
-    def output(self,confile):
-        config_data = Config(confile)
-        rate = q1.get(timout=1)
-        final_result = []
-        for key,salary in self.userdata.items():
-            if float(salary) < float(config_data.get_config('JiShuL')):
-                value = config_data.get_config('JiShuL')
-            elif float(salary) > float(config_data.get_config('JiShuH')):                
-                value = config_data.get_config('JiShuH')
+
+class calculate(Process);
+    def __init__(self,cfgfile):
+        self.JiShuL = config(cfgfile).get_config(JiShuL)
+        self.JiShuH = config(cfgfile).get_config(JiShuH)
+        self.rate = config(cfgfile).get_total_rate()
+        
+    def tax(self,salary,tax_rate,quick_deduction):
+        insurance = self.insurance(salary)
+        tax_part = salary - insurance - 3500
+        tax = tax_part * tax_rate - quick_deduction
+        return tax
+
+
+    def insurance(self,salary):
+        if salary < self.JiShuL:
+            insurance_part = self.JiShuL
+        if salary > self.JiShuH:
+            insurance_part = self.JiShuH                
+        insurance = insurance_part*self.rate
+        return insurance
+
+    def result(self):
+        user_info=[]
+        userdata=q_userdata.get()
+        for key, salary in userdata:
+            insurance = self.insurance(salary)
+            a = salary - insurance -3500
+            if a <=0:
+                tax_rate = float(0)
+                quick_deduction = 0
+                tax = self.tax(salary,tax_rate,quick_deduction)
+            elif a <=1500:
+                tax_rate = float(0.03)
+                quick_deduction = 0
+                tax = self.tax(salary,tax_rate,quick_deduction)            
+            elif a <=4500:
+                tax_rate = float(0.1)
+                quick_deduction = 105
+                tax = self.tax(salary,tax_rate,quick_deduction)
+            if a <=9000:
+                tax_rate = float(0.2)
+                quick_deduction = 555
+                tax = self.tax(salary,tax_rate,quick_deduction)
+            if a <=35000:
+                tax_rate = float(0.25)
+                quick_deduction = 1005
+                tax = self.tax(salary,tax_rate,quick_deduction)
+            if a <=55000:
+                tax_rate = float(0.3)
+                quick_deduction = 2755
+                tax = self.tax(salary,tax_rate,quick_deduction)
+            if a <=80000:
+                tax_rate = float(0.35)
+                quick_deduction = 5505
+                tax = self.tax(salary,tax_rate,quick_deduction)
             else:
-                value = salary
-            rate = q1.get(timeout=1)
-            insurance = self.cal_insurance(value,rate)
-            pure_income = self.calculate(salary,insurance)
-            tmp = [key,self.userdata[key],format(insurance,'.2f'),format(pure_income[0],'.2f'),format(pure_income[1],'.2f')]
-            final_result.append(tmp)
-        q2.put(final_result)
+                tax_rate = float(0.45)
+                quick_deduction = 13505
+                tax = self.tax(salary,tax_rate,quick_deduction)            
+            #ID,salary,insurance,tax,income             
+            pure_income = salary - insurance - tax
+            tmp=[key,salary,insurance,tax,pure_income]
+            user_info.append(tmp)
+        q_result.put(user_info)        
 
 
-    def cal_insurance(self,value):
-        rate = q1.get(timeout=1)
-        insurance = float(value)*rate
-        return insurance                 
-                        
-
-    def calculate(self,salary,insurance):        
-        before_tax = float(salary)-float(insurance)
-        a = before_tax - 3500                
-                
-        tmp = float(salary)-float(insurance)
-        if a <= 0:
-            revenue = before_tax
-            tax = 0
-        elif a<= 1500:
-            revenue = tmp-a*0.03
-            tax = a*0.03
-        elif a<= 4500:
-            revenue = tmp-a*0.1+105
-            tax = a*0.1-105
-        elif a<= 9000:
-            revenue = tmp-a*0.2+555
-            tax = a*0.2-555
-        elif a<= 35000:
-            revenue = tmp-a*0.25+1005
-            tax = a*0.25-1005
-        elif a<= 55000:
-            revenue = tmp-a*0.3+2755
-            tax = a*0.3-2755
-        elif a<= 80000:
-            revenue = tmp-a*0.35+5505
-            tax = a*0.35-5505
-        else:
-            revenue = tmp-a*0.45+13505
-            tax = a*0.45-13505
-        return tax,revenue
+class write_data(Process):
+    final_result = q_result.get()
+    with open(result,w) as file:
+        writer = csv.writer(file)
+        writer.writerows(final_result)
 
 
-
-if __name__=="__main__":    
+if __name__ =='__main__':
     args = sys.argv[1:]
     try:
         index_config = args.index('-d')+1
@@ -116,9 +125,9 @@ if __name__=="__main__":
         index_output = args.index('-o')+1
     except:
         print('Parameter incorrect')
-        os._exit(0)
-    user = args[index_config]
-    confile = args[index_user]
+        sys.exit(1)
+    cfgfile = args[index_config]
+    userfile = args[index_user]
     result = args[index_output]
     t = [user,confile]
     for i in t:
@@ -126,13 +135,9 @@ if __name__=="__main__":
             pass
         else:
             print('file does not exist')
-            os._exit(0)
-    #userdata = DataProcess(user)
-    #userdata.output(confile,result)
-    
-    DataProcess(user).output(confile)
-    Config(confile).get_total_rate()
-    write_file().writ_file(result)
-    with open(result) as file:
-        for line in file:
-            print(line)
+            sys.exit(1)
+
+    userdata(userfile)
+    calculate(cfgfile).result()
+    write_data(result)
+  
