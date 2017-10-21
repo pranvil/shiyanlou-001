@@ -2,8 +2,15 @@
 import sys
 import os
 import csv
+from multiprocessing import Process,Queue,Pool
 
-class Config(object):
+queue = Queue()
+queue2 = Queue()
+queue3 = Queue()
+queue4 = Queue()
+
+
+class Config(Process):
     def __init__(self,configfile):
         self.config = {}
         try:
@@ -13,7 +20,7 @@ class Config(object):
                     self.config[tmp[0].strip()] = tmp[1].strip()
         except:
             print('Parameter Error')
-            os._exit(0)
+            sys.exit(1)
             
     def get_config(self,key):
         value = self.config[key]
@@ -24,11 +31,10 @@ class Config(object):
         rate = 0
         for i in rate_category:
             rate = float(self.get_config(i)) + float(rate)          
-        return rate
+        queue.put(rate)
 
 
-
-class DataProcess(object):
+class DataProcess(Process):
     def __init__(self,userfile):
         self.userdata = {}
         try:
@@ -38,7 +44,7 @@ class DataProcess(object):
                     self.userdata[tmp[0].strip()] = float(tmp[1].strip())
         except:
             print('Parameter Error')
-            os._exit(0)
+            sys.exit(1)
     
   
     def output(self,confile,result):
@@ -52,7 +58,8 @@ class DataProcess(object):
                 value = config_data.get_config('JiShuH')
             else:
                 value = salary
-            insurance = self.cal_insurance(value,rate)
+            queue3.put(value)
+            insurance = queue2.get()
             pure_income = self.calculate(salary,insurance)
             tmp = [key,self.userdata[key],format(insurance,'.2f'),format(pure_income[0],'.2f'),format(pure_income[1],'.2f')]
             final_result.append(tmp)
@@ -60,9 +67,11 @@ class DataProcess(object):
             writer = csv.writer(file)
             writer.writerows(final_result)
 
-    def cal_insurance(self,value,rate):
+    def cal_insurance(self):
+        rate = queue.get()
+        value = queue3.get()
         insurance = float(value)*rate
-        return insurance                 
+        queue2.put(insurance)                 
                         
 
     def calculate(self,salary,insurance):        
@@ -98,7 +107,8 @@ class DataProcess(object):
 
 
 
-if __name__=="__main__":    
+if __name__=="__main__":
+    queue = Queue()
     args = sys.argv[1:]
     try:
         index_config = args.index('-d')+1
@@ -106,7 +116,7 @@ if __name__=="__main__":
         index_output = args.index('-o')+1
     except:
         print('Parameter incorrect')
-        os._exit(0)
+        sys.exit(1)
     user = args[index_config]
     confile = args[index_user]
     result = args[index_output]
@@ -116,8 +126,10 @@ if __name__=="__main__":
             pass
         else:
             print('file does not exist')
-            os._exit(0)
+            sys.exit(1)
+    Config.get_total_rate()
     userdata = DataProcess(user)
+    userdata.cal_insurance()
     userdata.output(confile,result)
     with open(result) as file:
         for line in file:
