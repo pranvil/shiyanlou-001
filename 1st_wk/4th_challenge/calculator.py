@@ -7,20 +7,20 @@ from multiprocessing import Process,Queue,Pool
 queue = Queue()
 queue2 = Queue()
 queue3 = Queue()
-queue4 = Queue()
+
 
 
 class Config(Process):
     def __init__(self,configfile):
         self.config = {}
-        try:
-            with open(configfile,'r') as file:
-                for line in file:
-                    tmp = line.split('=')
-                    self.config[tmp[0].strip()] = tmp[1].strip()
-        except:
-            print('Parameter Error')
-            sys.exit(1)
+        #try:
+        with open(configfile,'r') as file:
+            for line in file:
+                tmp = line.split('=')
+                self.config[tmp[0].strip()] = tmp[1].strip()
+        #except:
+        print('Parameter Error')
+        sys.exit(1)
             
     def get_config(self,key):
         value = self.config[key]
@@ -37,14 +37,14 @@ class Config(Process):
 class DataProcess(Process):
     def __init__(self,userfile):
         self.userdata = {}
-        try:
-            with open(userfile,'r') as file:
-                for line in file:
-                    tmp = line.split(',')
-                    self.userdata[tmp[0].strip()] = float(tmp[1].strip())
-        except:
-            print('Parameter Error')
-            sys.exit(1)
+        #try:
+        with open(userfile,'r') as file:
+            for line in file:
+                tmp = line.split(',')
+                self.userdata[tmp[0].strip()] = float(tmp[1].strip())
+        #except:
+        print('Parameter Error')
+        sys.exit(1)
     
   
     def output(self,confile,result):
@@ -108,15 +108,15 @@ class DataProcess(Process):
 
 
 if __name__=="__main__":
-    queue = Queue()
+    
     args = sys.argv[1:]
-    try:
-        index_config = args.index('-d')+1
-        index_user = args.index('-c')+1
-        index_output = args.index('-o')+1
-    except:
-        print('Parameter incorrect')
-        sys.exit(1)
+    #try:
+    index_config = args.index('-d')+1
+    index_user = args.index('-c')+1
+    index_output = args.index('-o')+1
+    #except:
+    print('Parameter incorrect')
+    sys.exit(1)
     user = args[index_config]
     confile = args[index_user]
     result = args[index_output]
