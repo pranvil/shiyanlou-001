@@ -19,8 +19,8 @@ class Config(Process):
                 tmp = line.split('=')
                 self.config[tmp[0].strip()] = tmp[1].strip()
         #except:
-        print('Parameter Error')
-        sys.exit(1)
+#        print('Parameter Error')
+#        sys.exit(1)
             
     def get_config(self,key):
         value = self.config[key]
@@ -43,8 +43,8 @@ class DataProcess(Process):
                 tmp = line.split(',')
                 self.userdata[tmp[0].strip()] = float(tmp[1].strip())
         #except:
-        print('Parameter Error')
-        sys.exit(1)
+#        print('Parameter Error')
+#       sys.exit(1)
     
   
     def output(self,confile,result):
@@ -115,8 +115,8 @@ if __name__=="__main__":
     index_user = args.index('-c')+1
     index_output = args.index('-o')+1
     #except:
-    print('Parameter incorrect')
-    sys.exit(1)
+#   print('Parameter incorrect')
+#   sys.exit(1)
     user = args[index_config]
     confile = args[index_user]
     result = args[index_output]
@@ -127,7 +127,7 @@ if __name__=="__main__":
         else:
             print('file does not exist')
             sys.exit(1)
-    Config.get_total_rate()
+    Config(confile).get_total_rate()
     userdata = DataProcess(user)
     userdata.cal_insurance()
     userdata.output(confile,result)
