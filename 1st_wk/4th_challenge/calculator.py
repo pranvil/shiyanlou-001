@@ -2,25 +2,21 @@
 import sys
 import os
 import csv
-from multiprocessing import Process,Queue,Pool
-
-queue = Queue()
-queue2 = Queue()
-queue3 = Queue()
-
-
+from multiprocessing import Process,Queue 
+q1 = Queue()
+q2 = Queue()
 
 class Config(Process):
     def __init__(self,configfile):
         self.config = {}
-        #try:
-        with open(configfile,'r') as file:
-            for line in file:
-                tmp = line.split('=')
-                self.config[tmp[0].strip()] = tmp[1].strip()
-        #except:
-#        print('Parameter Error')
-#        sys.exit(1)
+        try:
+            with open(configfile,'r') as file:
+                for line in file:
+                    tmp = line.split('=')
+                    self.config[tmp[0].strip()] = tmp[1].strip()
+        except:
+            print('Parameter Error')
+            os._exit(0)
             
     def get_config(self,key):
         value = self.config[key]
@@ -31,25 +27,32 @@ class Config(Process):
         rate = 0
         for i in rate_category:
             rate = float(self.get_config(i)) + float(rate)          
-        queue.put(rate)
+        q1.put(rate)
+
+class write_file(Process):
+    def writ_file(self,result):
+        final_result=q2.get(timeout=1)
+        with open(result,'w',newline='') as file:
+        writer = csv.writer(file)
+        writer.writerows(final_result)
 
 
 class DataProcess(Process):
     def __init__(self,userfile):
         self.userdata = {}
-        #try:
-        with open(userfile,'r') as file:
-            for line in file:
-                tmp = line.split(',')
-                self.userdata[tmp[0].strip()] = float(tmp[1].strip())
-        #except:
-#        print('Parameter Error')
-#       sys.exit(1)
+        try:
+            with open(userfile,'r') as file:
+                for line in file:
+                    tmp = line.split(',')
+                    self.userdata[tmp[0].strip()] = float(tmp[1].strip())
+        except:
+            print('Parameter Error')
+            os._exit(0)
     
   
-    def output(self,confile,result):
+    def output(self,confile):
         config_data = Config(confile)
-        rate = config_data.get_total_rate()
+        rate = q1.get(timout=1)
         final_result = []
         for key,salary in self.userdata.items():
             if float(salary) < float(config_data.get_config('JiShuL')):
@@ -58,20 +61,18 @@ class DataProcess(Process):
                 value = config_data.get_config('JiShuH')
             else:
                 value = salary
-            queue3.put(value)
-            insurance = queue2.get()
+            rate = q1.get(timeout=1)
+            insurance = self.cal_insurance(value,rate)
             pure_income = self.calculate(salary,insurance)
             tmp = [key,self.userdata[key],format(insurance,'.2f'),format(pure_income[0],'.2f'),format(pure_income[1],'.2f')]
             final_result.append(tmp)
-        with open(result,'w',newline='') as file:
-            writer = csv.writer(file)
-            writer.writerows(final_result)
+        q2.put(final_result)
 
-    def cal_insurance(self):
-        rate = queue.get()
-        value = queue3.get()
+
+    def cal_insurance(self,value):
+        rate = q1.get(timeout=1)
         insurance = float(value)*rate
-        queue2.put(insurance)                 
+        return insurance                 
                         
 
     def calculate(self,salary,insurance):        
@@ -107,16 +108,15 @@ class DataProcess(Process):
 
 
 
-if __name__=="__main__":
-    
+if __name__=="__main__":    
     args = sys.argv[1:]
-    #try:
-    index_config = args.index('-d')+1
-    index_user = args.index('-c')+1
-    index_output = args.index('-o')+1
-    #except:
-#   print('Parameter incorrect')
-#   sys.exit(1)
+    try:
+        index_config = args.index('-d')+1
+        index_user = args.index('-c')+1
+        index_output = args.index('-o')+1
+    except:
+        print('Parameter incorrect')
+        os._exit(0)
     user = args[index_config]
     confile = args[index_user]
     result = args[index_output]
@@ -126,11 +126,13 @@ if __name__=="__main__":
             pass
         else:
             print('file does not exist')
-            sys.exit(1)
+            os._exit(0)
+    #userdata = DataProcess(user)
+    #userdata.output(confile,result)
+    
+    DataProcess(user).output(confile)
     Config(confile).get_total_rate()
-    userdata = DataProcess(user)
-    userdata.cal_insurance()
-    userdata.output(confile,result)
+    write_file().writ_file(result)
     with open(result) as file:
         for line in file:
             print(line)
