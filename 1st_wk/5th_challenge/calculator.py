@@ -123,7 +123,7 @@ class write_data(Process):
 
 if __name__ =='__main__':    
     try:
-        opts, args = getopt.getopt(sys.args[1:], "hC:c:d:o:", ["help"])
+        opts, args = getopt.getopt(sys.argv[1:], "hC:c:d:o:", ["help"])
     except getopt.GetoptError as err:        
         print("option does not recognized")          
         sys.exit(1)
