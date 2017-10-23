@@ -12,6 +12,7 @@ class config(object):
         self.config = {}
         config = configparser.ConfigParser()
         config.read(cfgfile)
+#        print('inside',city)
         try:
             for key in config[city]:
                 value = config.get(city,key)
@@ -143,11 +144,12 @@ if __name__ =='__main__':
         if m == "-h" or m == '--help':
             print('Usage: calculator.py -C cityname -c configfile -d userdata -o resultdata')
             sys.exit(1)
-        if '-C' in m:
-            index_city = args.index('-C')+1
-            config_city = args[index_city].upper()
-        else:
-            config_city = 'DEFAULT'
+    if '-C' in args:
+        index_city = args.index('-C')+1
+        config_city = args[index_city].upper()
+        print(config_city)
+    else:
+        config_city = 'DEFAULT'
 
 
     
