@@ -120,8 +120,9 @@ class calculate(Process):
             insurance = format(insurance,'.2f')           
             tax = format(tax,'.2f')           
             pure_income = format(pure_income,'.2f')           
-            salary = format(salary,'.2f')           
-            tmp=[key,salary,insurance,tax,pure_income]
+            salary = format(salary,'.2f')
+            time_now = datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+            tmp=[key,salary,insurance,tax,pure_income,time_now]
             user_info.append(tmp)
 #       print('line115-userinfo:',user_info[2])
         q_result.put(user_info)        
@@ -146,6 +147,9 @@ if __name__ =='__main__':
             config_city = args[index_city].upper()
         else:
             config_city = 'DEFAULT'
+
+
+    
 
     index_user = args.index('-d')+1
     index_config = args.index('-c')+1
