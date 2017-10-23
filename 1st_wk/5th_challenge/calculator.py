@@ -6,7 +6,7 @@ from multiprocessing import Process, Queue
 q_userdata = Queue()
 q_result = Queue()
 
-class config(Process);
+class config(Process):
     def __init__(self,cfgfile,city):
         self.config = {}
         config = configparser.ConfigParser()
@@ -32,7 +32,7 @@ class config(Process);
         return rate
 
 
-class userdata(object);
+class userdata(object):
 
     def __init__(self,userfile):
         self.userdata = {}
@@ -47,7 +47,7 @@ class userdata(object);
         q_userdata.put(self.userdata )
     
 
-class calculate(Process);
+class calculate(Process):
     def __init__(self,cfgfile):
         self.JiShuL = config(cfgfile).get_config(JiShuL)
         self.JiShuH = config(cfgfile).get_config(JiShuH)
