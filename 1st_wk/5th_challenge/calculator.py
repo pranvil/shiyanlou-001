@@ -16,12 +16,12 @@ class config(object):
             for key in config[city]:
                 value = config.get(city,key)
                 self.config[key] = float(value.strip())
-
         except:
             print('Config file parameter Error,please check you config file')
             sys.exit(1)
             
     def get_config(self,key):
+        key = key.lower()
         value = self.config[key]
         return value
 
@@ -49,10 +49,10 @@ class userdata(Process):
     
 
 class calculate(Process):
-    def __init__(self,cfgfile):
-        self.JiShuL = config(cfgfile).get_config('JiShuL')
-        self.JiShuH = config(cfgfile).get_config('JiShuH')
-        self.rate = config(cfgfile).get_total_rate()
+    def __init__(self,cfgfile,city):
+        self.JiShuL = config(cfgfile,city).get_config('JiShuL')
+        self.JiShuH = config(cfgfile,city).get_config('JiShuH')
+        self.rate = config(cfgfile,city).get_total_rate()
         
     def tax(self,salary,tax_rate,quick_deduction):
 #        print('salary:',salary,'tax_rate:',tax_rate,'deduction:',quick_deduction)
@@ -135,11 +135,12 @@ class write_data(Process):
 if __name__ =='__main__':
     try:
         opts, args = getopt.getopt(sys.argv[1:], "hC:c:d:o:", ["help"])
+        args = sys.argv[1:]
     except getopt.GetoptError as err:        
         print("option does not recognized")          
         sys.exit(1)
     for m, n in opts:
-        if "-h" or '--help' in m:
+        if m == "-h" or m == '--help':
             print('Usage: calculator.py -C cityname -c configfile -d userdata -o resultdata')
             sys.exit(1)
         if '-C' in m:
@@ -167,7 +168,7 @@ if __name__ =='__main__':
             sys.exit(1)
 
     userdata().run(userfile)
-    calculate(cfgfile).run()
+    calculate(cfgfile,config_city).run()
     write_data.run(result)
     with open(result,'r') as file:
         for line in file:
