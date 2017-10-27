@@ -5,15 +5,15 @@ from flask import Flask, render_template
 import os
 
 app = Flask(__name__)
-app.run(port=3000)
+#app.run(port=3000)
 app.config['TEMPLATES_AUTO_RELOAD'] = True
 
 @app.route('/')
 def index():
     article=[]
-    file_list = os.listdir('/home/pranvil/test/files')
+    file_list = os.listdir('/home/shiyanlou/files')
     for i in file_list:
-        path = '/home/pranvil/test/files/'+i
+        path = '/home/shiyanlou/files/'+i
         with open(path,'r') as file:
             for line in file:
                 if 'title' in line:
@@ -26,7 +26,7 @@ def index():
 def file(filename):
     try:
         content=[]
-        path = '/home/pranvil/test/files/'+filename+'.json'
+        path = '/home/shiyanlou/files/'+filename+'.json'
         with open(path,'r') as file:
             for line in file:
                 if 'title' in line or 'created_time' in line or 'content' in line:
